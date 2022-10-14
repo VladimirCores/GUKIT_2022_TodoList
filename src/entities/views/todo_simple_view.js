@@ -4,13 +4,16 @@ class TodoSimpleView {
     this.todoVO = todoVO;
   }
   get template() {
-    return ['<br>', '1_index', '. ', '3_text'];
+    const checked = this.todoVO.isCompleted ? "checked" : "";
+    console.log("> TodoSimpleView -> template: isCompleted", checked);
+    const checkbox = `<input id="${this.todoVO.id}" type="checkbox" ${checked}/>`;
+    return ["<br>", "1_index", ". ", checkbox, "4_text"];
   }
   render() {
     const todoDomItemTemplate = this.template;
     todoDomItemTemplate[1] = this.index + 1;
-    todoDomItemTemplate[3] = this.todoVO.text;
-    return todoDomItemTemplate.join('');
+    todoDomItemTemplate[4] = this.todoVO.text;
+    return todoDomItemTemplate.join("");
   }
 }
 

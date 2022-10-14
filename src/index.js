@@ -2,7 +2,7 @@ import TodoVO from "./entities/vos/todo_vo";
 import TodoSimpleView from "./entities/views/todo_simple_view";
 import TodoEditView from "./entities/views/todo_edit_view";
 
-const domInputTodoText = document.querySelector("#inputTodo");
+const domInputTodoText = document.getElementById("inputTodoTitle");
 const domBtnCreateTodo = document.querySelector("#btnCreate");
 const domChbEditTodos = document.querySelector("#checkerEdit");
 const domListOfTodos = document.querySelector("#listOfTodos");
@@ -10,16 +10,45 @@ const domListOfTodos = document.querySelector("#listOfTodos");
 domBtnCreateTodo.addEventListener("click", onBtnCreateTodoClick);
 domInputTodoText.addEventListener("keyup", onTodoTextInputKeyUp);
 domChbEditTodos.addEventListener("change", onChbEditTodoChange);
+domListOfTodos.addEventListener("change", onTodoCompleteChanged);
+
+const LOCAL_KEY__USER_INPUT_TODO = "todoUserInput";
+const LOCAL_KEY__LIST_OF_TODOS = "listOfTodo";
+
+domInputTodoText.value = localStorage[LOCAL_KEY__USER_INPUT_TODO] || "";
+
+const listOfTodo = JSON.parse(
+  localStorage.getItem(LOCAL_KEY__LIST_OF_TODOS) || "[]"
+).map((obj) => {
+  return new TodoVO(obj.id, obj.text, obj.isCompleted);
+});
+
+console.log("> listOfTodo", listOfTodo);
 
 checkStringValueAndDisableEnableButton(
   domInputTodoText.value,
   domBtnCreateTodo
 );
 
-const LOCAL_KEY__USER_INPUT_TODO = "todoUserInput";
+renderTodoListInDom(listOfTodo, domListOfTodos, TodoSimpleView);
 
-const listOfTodo = [];
-domInputTodoText.value = localStorage[LOCAL_KEY__USER_INPUT_TODO] || "";
+function onTodoCompleteChanged(e) {
+  console.log(
+    "> onTodoCompleteChanged: e.target =",
+    e.target.checked,
+    e.target.id
+  );
+  const todoId = parseInt(e.target.id, 10);
+  const todoVO = listOfTodo.find((item) => {
+    console.log("> \t item.id:", item.id, todoId);
+    return item.id === todoId;
+  });
+  console.log("> onTodoCompleteChanged: todoVO =", todoVO);
+  if (todoVO != null) {
+    todoVO.isCompleted = e.target.checked;
+    saveLocalState();
+  }
+}
 
 function onBtnCreateTodoClick(event) {
   let todoInputTextValue = localStorage[LOCAL_KEY__USER_INPUT_TODO];
@@ -27,7 +56,7 @@ function onBtnCreateTodoClick(event) {
 
   if (isInputValueNumber(todoInputTextValue)) return;
 
-  const todoVO = new TodoVO(Date.now, todoInputTextValue, false);
+  const todoVO = new TodoVO(Date.now(), todoInputTextValue, false);
 
   listOfTodo.push(todoVO);
 
@@ -37,11 +66,13 @@ function onBtnCreateTodoClick(event) {
     listOfTodo
   );
 
+  saveLocalState();
   renderTodoListInDom(listOfTodo, domListOfTodos, TodoSimpleView);
+  clearInputValue();
 }
 
 function onTodoTextInputKeyUp() {
-  let todoInputTextValue = domInputTodoText.value;
+  const todoInputTextValue = domInputTodoText.value;
   console.log(
     "> domInputTodoText -> onTodoTextInputKeyUp: input value =",
     todoInputTextValue
@@ -71,10 +102,10 @@ function renderTodoListInDom(listOfTodo, dom, RenderClass) {
 
 function isInputValueNumber(input) {
   const parsedToInt = parseInt(input, 10);
-  if (!isNaN(parsedToInt)) {
-    alert("Number is not allowed");
-    return true;
-  } else return false;
+  const result = !isNaN(parsedToInt);
+  console.log("> isInputValueNumber:", input, result);
+  if (result) alert("Number is not allowed");
+  return result;
 }
 
 function checkStringValueAndDisableEnableButton(value, button) {
@@ -83,4 +114,14 @@ function checkStringValueAndDisableEnableButton(value, button) {
   } else {
     button.disabled = true;
   }
+}
+
+function clearInputValue() {
+  localStorage[LOCAL_KEY__USER_INPUT_TODO] = "";
+  domInputTodoText.value = "";
+}
+
+function saveLocalState() {
+  localStorage[LOCAL_KEY__LIST_OF_TODOS] = JSON.stringify(listOfTodo);
+  console.log("> saveLocalState", localStorage[LOCAL_KEY__LIST_OF_TODOS]);
 }
