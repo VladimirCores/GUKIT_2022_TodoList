@@ -1,0 +1,4 @@
+class Zealot extends Unit {
+
+
+}
